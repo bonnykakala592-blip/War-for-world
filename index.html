@@ -3,7 +3,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
 <title>Metropolis Fallen – Prototype FPS</title>
 <style>
-:root{--bg:#0b0d10;--fg:#d7e4ea;--ac:#4fd1c5;--red:#ff4455;color-scheme:dark}
+:root{--bg:#0b0d10;--fg:#d7e4ea;--ac:#4fd1c5;--red:#ff4455;--u:clamp(52px,13vmin,92px);color-scheme:dark}
 *{box-sizing:border-box;-webkit-user-select:none;user-select:none;-webkit-tap-highlight-color:transparent}
 html,body{margin:0;height:100%;background:var(--bg);color:var(--fg);font-family:system-ui,sans-serif;overflow:hidden;touch-action:none}
 canvas#c{position:fixed;inset:0;width:100%;height:100%;display:block}
@@ -25,48 +25,70 @@ canvas#c{position:fixed;inset:0;width:100%;height:100%;display:block}
 #ov p{max-width:520px;line-height:1.5;margin:6px 0;font-size:14px}
 button.m{background:var(--ac);color:#041;border:0;padding:14px 34px;font-size:18px;font-weight:800;letter-spacing:.1em;margin:14px 0;border-radius:4px;cursor:pointer}
 button.s{background:#223;color:var(--fg);border:1px solid #fff4;padding:8px 10px;margin:3px;font-size:12px;border-radius:4px;cursor:pointer}button.s.on{background:var(--ac);color:#041}
+.ib{background:#0008;color:#fff;border:1px solid #fff5;border-radius:8px;width:44px;height:44px;display:flex;align-items:center;justify-content:center;pointer-events:auto;cursor:pointer;padding:0}
+#bt{position:fixed;inset:0;pointer-events:none;z-index:5}.tb{pointer-events:auto}
+#jz{position:fixed;left:0;top:0;width:45%;height:100%;z-index:3}
+.lh #jz{left:auto;right:0}.lh #look{right:auto;left:0}.lh #joy{left:auto;right:calc(24px + env(safe-area-inset-right,0px))}
+.lh #bt{transform:scaleX(-1)}.lh #bt .tb{transform:scaleX(-1)}
+.tonly{display:none}.t .tonly{display:block}.t .donly{display:none}details{margin:4px;font-size:13px}
+#rot{display:none;position:fixed;inset:0;background:#000;z-index:20;align-items:center;justify-content:center;flex-direction:column;text-align:center;padding:20px;gap:12px}
+@media (orientation:portrait) and (max-width:700px){.t #rot{display:flex}}
+.t #left{bottom:calc(var(--u)*2.3 + 24px + env(safe-area-inset-bottom,0px))}
+.t #right{bottom:auto;top:calc(76px + env(safe-area-inset-top,0px));font-size:18px}
+.lh #left{left:auto;right:calc(10px + env(safe-area-inset-right,0px))}
+.lh #right{right:auto;left:calc(10px + env(safe-area-inset-left,0px));text-align:left}
+@media (max-height:480px){#mm{width:80px;height:80px}.hud{font-size:12px}.bar{width:110px}}
 label{font-size:13px;display:block;margin:4px}
 #tc{display:none}
 .t #tc{display:block}
-.tb{position:fixed;width:64px;height:64px;border-radius:50%;background:#ffffff22;border:2px solid #fff6;color:#fff;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;z-index:5}
-#joy{position:fixed;left:calc(24px + env(safe-area-inset-left,0px));bottom:calc(30px + env(safe-area-inset-bottom,0px));width:130px;height:130px;border-radius:50%;background:#ffffff14;border:2px solid #fff4;z-index:5}
-#knob{position:absolute;left:45px;top:45px;width:40px;height:40px;border-radius:50%;background:#fff6}
+.tb{position:fixed;width:var(--u);height:var(--u);border-radius:50%;background:#ffffff22;border:2px solid #fff6;color:#fff;display:flex;align-items:center;justify-content:center;font-size:calc(var(--u)*.21);font-weight:700;z-index:5}
+#joy{position:fixed;left:calc(24px + env(safe-area-inset-left,0px));bottom:calc(30px + env(safe-area-inset-bottom,0px));width:calc(var(--u)*2);height:calc(var(--u)*2);border-radius:50%;background:#ffffff14;border:2px solid #fff4;z-index:5;pointer-events:none;opacity:.6}
+#knob{position:absolute;left:30%;top:30%;width:40%;height:40%;border-radius:50%;background:#fff6}
 #look{position:fixed;right:0;top:0;width:55%;height:100%;z-index:2}
 </style></head><body>
 <canvas id="c"></canvas>
-<div id="cross"></div><div id="hit"></div><div id="hurt"></div><div id="toast" class="hud" style="top:30%;left:50%;transform:translateX(-50%);font-size:20px;color:var(--ac);text-align:center;opacity:0;transition:opacity .4s"></div>
+<div id="cross"></div><div id="hit"></div><div id="dir" style="position:fixed;left:50%;top:50%;width:0;height:0;pointer-events:none;opacity:0;transition:opacity .5s"><div style="position:absolute;left:-40px;top:-130px;width:80px;height:20px;background:radial-gradient(ellipse at 50% 100%,#f23 0,#f230 70%)"></div></div>
+<div id="bossb" class="hud" style="top:74px;left:50%;transform:translateX(-50%);width:min(60vw,360px);display:none"><div style="font-size:12px;text-align:center">ALIEN ALPHA</div><div class="bar" style="width:100%;height:12px"><div id="bossh" style="height:100%;width:100%;background:var(--red)"></div></div></div><div id="hurt"></div><div id="toast" class="hud" style="top:30%;left:50%;transform:translateX(-50%);font-size:20px;color:var(--ac);text-align:center;opacity:0;transition:opacity .4s"></div>
+<div id="tb2" style="position:fixed;top:calc(8px + env(safe-area-inset-top,0px));right:calc(10px + env(safe-area-inset-right,0px));display:flex;gap:8px;z-index:6"><button class="ib" id="bFs" aria-label="Plein écran"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg></button><button class="ib" id="bPause" aria-label="Pause"><svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor"><rect x="6" y="5" width="4" height="14" rx="1"/><rect x="14" y="5" width="4" height="14" rx="1"/></svg></button><button class="ib" id="bHome" aria-label="Menu principal"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M3 11l9-8 9 8v10h-6v-6H9v6H3z"/></svg></button></div>
 <div class="hud" id="top"><div id="mis">MISSION 1 : ÉLIMINATION</div><div id="obj">Éliminer 6 extraterrestres : 0 / 6</div><div id="tm">00:00</div></div>
 <div class="hud" id="left"><div>SANTÉ <span id="hpT">100</span></div><div class="bar"><div id="hp"></div></div><canvas id="mm" width="110" height="110"></canvas></div>
 <div class="hud" id="right"><div id="wn">FUSIL D’ASSAUT</div><div id="ammo">30 / 150</div><div id="rl" style="font-size:13px;color:var(--ac)"></div><div id="air" style="font-size:13px"></div></div>
 <div id="tc">
  <div id="look"></div>
- <div id="joy"><div id="knob"></div></div>
- <div class="tb" id="bFire" style="right:24px;bottom:calc(120px + env(safe-area-inset-bottom,0px))">TIR</div>
- <div class="tb" id="bJump" style="right:100px;bottom:calc(60px + env(safe-area-inset-bottom,0px))">SAUT</div>
- <div class="tb" id="bRel" style="right:100px;bottom:calc(140px + env(safe-area-inset-bottom,0px))">RECH.</div>
- <div class="tb" id="bSpr" style="right:24px;bottom:calc(200px + env(safe-area-inset-bottom,0px))">SPRINT</div>
- <div class="tb" id="bAim" style="right:180px;bottom:calc(110px + env(safe-area-inset-bottom,0px))">VISER</div>
- <div class="tb" id="bSw" style="right:180px;bottom:calc(190px + env(safe-area-inset-bottom,0px))">ARME</div>
- <div class="tb" id="bAir" style="right:260px;bottom:calc(150px + env(safe-area-inset-bottom,0px))">FRAPPE</div>
+ <div id="jz"></div><div id="joy"><div id="knob"></div></div>
+ <div id="bt"><div class="tb" id="bFire" style="right:calc(var(--u)*.38);bottom:calc(var(--u)*1.9 + env(safe-area-inset-bottom,0px))">TIR</div>
+ <div class="tb" id="bJump" style="right:calc(var(--u)*1.56);bottom:calc(var(--u)*.94 + env(safe-area-inset-bottom,0px))">SAUT</div>
+ <div class="tb" id="bRel" style="right:calc(var(--u)*1.56);bottom:calc(var(--u)*2.2 + env(safe-area-inset-bottom,0px))">RECH.</div>
+ <div class="tb" id="bSpr" style="right:calc(var(--u)*.38);bottom:calc(var(--u)*3.1 + env(safe-area-inset-bottom,0px))">SPRINT</div>
+ <div class="tb" id="bAim" style="right:calc(var(--u)*2.8);bottom:calc(var(--u)*1.7 + env(safe-area-inset-bottom,0px))">VISER</div>
+ <div class="tb" id="bSw" style="right:calc(var(--u)*2.8);bottom:calc(var(--u)*3 + env(safe-area-inset-bottom,0px))">ARME</div>
+ <div class="tb" id="bAir" style="right:calc(var(--u)*.38);bottom:calc(var(--u)*4.2 + env(safe-area-inset-bottom,0px))">FRAPPE</div>
+ <div class="tb" id="bCr" style="right:calc(var(--u)*1.56);bottom:calc(var(--u)*3.4 + env(safe-area-inset-bottom,0px))">ACCR.</div></div>
 </div>
+<div id="rot"><svg viewBox="0 0 24 24" width="56" height="56" fill="none" stroke="#4fd1c5" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="7" y="2" width="10" height="20" rx="2"/><path d="M19 8c2 1 3 2.5 3 4s-1 3-3 4M21 16l-2 1-1-2"/></svg><div>Tournez votre téléphone en paysage pour jouer</div></div>
 <div id="ov">
  <h1 id="ovT">METROPOLIS FALLEN</h1>
  <p id="ovP">Prototype jouable : carte 1, fusil d’assaut, aliens autonomes. Éliminez les 6 extraterrestres sans mourir.</p>
  <button class="m" id="ovB">NOUVELLE PARTIE</button>
+ <button class="m" id="ovM" style="display:none;align-items:center;gap:8px;background:#334;color:var(--fg);margin-top:0"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M3 11l9-8 9 8v10h-6v-6H9v6H3z"/></svg>MENU PRINCIPAL</button>
  <p id="best"></p>
- <div id="maps"></div><div id="arm"><canvas id="pv" width="220" height="110"></canvas><div id="wi" style="font-size:12px;max-width:320px"></div><div id="wb"></div></div>
- <label>Qualité <select id="q"><option value="0">FAIBLE</option><option value="1">MOYEN</option><option value="2">ÉLEVÉ</option></select></label>
+ <div id="ms"></div><div id="maps"></div><div id="arm"><canvas id="pv" width="220" height="110"></canvas><div id="wi" style="font-size:12px;max-width:320px"></div><div id="wb"></div></div>
+ <label>Champ de vision <input type="range" id="fov" min="60" max="110" step="1" value="75"></label><details class="donly"><summary>Touches</summary><div id="kb"></div></details>
+ <label class="tonly">Taille des boutons <input type="range" id="bsz" min=".8" max="1.5" step=".05" value="1"></label><label class="tonly"><input type="checkbox" id="lh"> Mode gaucher</label>
+ <label>Difficulté <select id="df"><option value="0">FACILE</option><option value="1" selected>NORMAL</option><option value="2">DIFFICILE</option></select></label>
+ 
  <label>Volume <input type="range" id="vol" min="0" max="1" step=".05" value=".6"></label>
  <label>Sensibilité <input type="range" id="sens" min=".4" max="2.5" step=".1" value="1"></label>
- <p id="help">ZQSD / WASD : bouger · Souris : viser · Clic gauche : tirer · Clic droit : zoom · Espace : sauter · Maj : sprint · R : recharger · 1-4 : armes · Échap : pause</p>
+ <p id="help">ZQSD / WASD : bouger · Souris : viser · Clic gauche : tirer · Clic droit : zoom · Espace : sauter · Maj : sprint · R : recharger · Ctrl : accroupi · F : frappe · 1-4 : armes · Échap : pause</p>
 </div>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script>
 "use strict";
 const $=id=>document.getElementById(id);
-const V=THREE.Vector3, TOUCH=("ontouchstart" in window)||navigator.maxTouchPoints>0;
+const V=THREE.Vector3, TOUCH=matchMedia("(pointer:coarse)").matches||(("ontouchstart" in window)&&!matchMedia("(pointer:fine)").matches);
 if(TOUCH)document.body.classList.add("t");
 const rnd=(a,b)=>a+Math.random()*(b-a);
+const lsj=k=>{try{return JSON.parse(localStorage.getItem(k)||"{}")||{}}catch(e){return{}}};
 
 /* ---------- SaveManager ---------- */
 const SAVE_KEY="metropolis_fps_v1";
@@ -87,26 +109,35 @@ class AudioManager{
     }
     if(this.ctx.state==="suspended")this.ctx.resume();
   }
+  sp(pos){
+    if(!pos||!this.cam)return null;const c=this.cam,d=pos.clone().sub(c.position),dist=d.length();d.y=0;
+    const r=new V(1,0,0).applyQuaternion(c.quaternion);r.y=0;r.normalize();
+    return{pan:Math.max(-1,Math.min(1,d.normalize().dot(r))),g:Math.min(1,8/Math.max(8,dist))};
+  }
+  out(g,pos){
+    const p=this.sp(pos);if(!p||!this.ctx.createStereoPanner){g.connect(this.master);return}
+    const st=this.ctx.createStereoPanner(),k=this.ctx.createGain();st.pan.value=p.pan;k.gain.value=p.g;g.connect(st);st.connect(k);k.connect(this.master);
+  }
   setVol(v){this.vol=v;if(this.master)this.master.gain.value=v}
-  noise(dur,freq,vol){
+  noise(dur,freq,vol,pos){
     if(!this.ctx)return;const c=this.ctx,s=c.createBufferSource();s.buffer=this.nb;
     const f=c.createBiquadFilter();f.type="lowpass";f.frequency.value=freq;
     const g=c.createGain();g.gain.setValueAtTime(vol,c.currentTime);g.gain.exponentialRampToValueAtTime(.001,c.currentTime+dur);
-    s.connect(f);f.connect(g);g.connect(this.master);s.start();s.stop(c.currentTime+dur);
+    s.connect(f);f.connect(g);this.out(g,pos);s.start();s.stop(c.currentTime+dur);
   }
-  tone(f0,f1,dur,vol,type="sine"){
+  tone(f0,f1,dur,vol,type="sine",pos){
     if(!this.ctx)return;const c=this.ctx,o=c.createOscillator(),g=c.createGain();o.type=type;
     o.frequency.setValueAtTime(f0,c.currentTime);o.frequency.exponentialRampToValueAtTime(Math.max(20,f1),c.currentTime+dur);
     g.gain.setValueAtTime(vol,c.currentTime);g.gain.exponentialRampToValueAtTime(.001,c.currentTime+dur);
-    o.connect(g);g.connect(this.master);o.start();o.stop(c.currentTime+dur);
+    o.connect(g);this.out(g,pos);o.start();o.stop(c.currentTime+dur);
   }
   shot(w=0){if(w===3){this.tone(900,150,.3,.4,"sawtooth");return}this.noise(w===1?.25:.14,w===2?4000:2200,.6);this.tone(w===2?90:160,40,w===1?.2:.12,.5,"square")}
   empty(){this.tone(900,700,.04,.2,"square")}
   reload(){this.tone(300,200,.08,.3,"square");setTimeout(()=>this.tone(500,350,.08,.3,"square"),900)}
   hit(){this.tone(1200,600,.06,.25,"triangle")}
   hurt(){this.noise(.2,600,.6);this.tone(120,60,.2,.4,"sawtooth")}
-  alien(){this.tone(500,150,.35,.25,"sawtooth")}
-  kill(){this.tone(300,40,.5,.4,"sawtooth");this.noise(.3,900,.3)}
+  alien(p){this.tone(500,150,.35,.25,"sawtooth",p)}
+  kill(p){this.tone(300,40,.5,.4,"sawtooth",p);this.noise(.3,900,.3,p)}
   step(){this.noise(.06,500,.12)}
   win(){[440,554,659,880].forEach((f,i)=>setTimeout(()=>this.tone(f,f,.3,.3,"triangle"),i*150))}
   lose(){this.tone(300,50,1.2,.5,"sawtooth")}
@@ -142,12 +173,12 @@ class CollisionSystem{
 
 /* ---------- ParticleSystem (pool limité) ---------- */
 class ParticleSystem{
-  constructor(scene,max){
+  constructor(scene,max){this.lim=1;
     this.g=new THREE.BoxGeometry(.07,.07,.07);this.i=0;this.list=[];
-    this.mats={spark:new THREE.MeshBasicMaterial({color:0xffc060}),blood:new THREE.MeshBasicMaterial({color:0x66ff88}),dust:new THREE.MeshBasicMaterial({color:0x998877}),plasma:new THREE.MeshBasicMaterial({color:0xb050ff})};
+    this.mats={spark:new THREE.MeshBasicMaterial({color:0xffc060}),blood:new THREE.MeshBasicMaterial({color:0x66ff88}),dust:new THREE.MeshBasicMaterial({color:0x998877}),plasma:new THREE.MeshBasicMaterial({color:0xb050ff}),brass:new THREE.MeshBasicMaterial({color:0xd4a030})};
     for(let k=0;k<max;k++){const m=new THREE.Mesh(this.g,this.mats.spark);m.visible=false;scene.add(m);this.list.push({m,v:new V(),life:0})}
   }
-  emit(p,n,type,sp){
+  emit(p,n,type,sp){n=Math.max(1,Math.round(n*this.lim));
     for(let k=0;k<n;k++){
       const q=this.list[this.i++%this.list.length];q.m.material=this.mats[type];q.m.position.copy(p);
       q.v.set(rnd(-.5,.5),rnd(0,.8),rnd(-.5,.5)).multiplyScalar(sp);q.life=rnd(.4,.9);q.m.visible=true;
@@ -176,8 +207,8 @@ class MapManager{
     this.start=[0,44];this.spawns=[[-24,-22,"fast"],[24,-24,"heavy"],[-26,24,"shooter"],[26,22,"shooter"],[0,-12,"fast"],[-30,0,"heavy"]];
     this.meds=[[-12,-8],[14,12],[0,-30],[-20,40],[30,-2]];this.boss=[0,-20];this.e.setEnv("#1c1a30","#7a4a50","#c47a4a",0x4a3a40,.02,0xffa060);
     const M=this.mats;
-    M.concrete=new THREE.MeshStandardMaterial({map:this.tex("#6d6a68",70,128,[3,3],(x,s)=>{x.strokeStyle="#0006";for(let i=0;i<6;i++){x.beginPath();x.moveTo(Math.random()*s,Math.random()*s);x.lineTo(Math.random()*s,Math.random()*s);x.stroke()}}),roughness:.9});
-    M.brick=new THREE.MeshStandardMaterial({map:this.tex("#6b3f33",60,128,[3,3],(x,s)=>{x.strokeStyle="#0007";for(let y=0;y<s;y+=16){x.beginPath();x.moveTo(0,y);x.lineTo(s,y);x.stroke()}}),roughness:.9});
+    M.concrete=new THREE.MeshStandardMaterial({map:this.tex("#6d6a68",70,128,[3,3],(x,s)=>{x.strokeStyle="#0006";for(let i=0;i<6;i++){x.beginPath();x.moveTo(Math.random()*s,Math.random()*s);x.lineTo(Math.random()*s,Math.random()*s);x.stroke()}this.win(x,s)}),roughness:.9});
+    M.brick=new THREE.MeshStandardMaterial({map:this.tex("#6b3f33",60,128,[3,3],(x,s)=>{x.strokeStyle="#0007";for(let y=0;y<s;y+=16){x.beginPath();x.moveTo(0,y);x.lineTo(s,y);x.stroke()}this.win(x,s)}),roughness:.9});
     M.metal=new THREE.MeshStandardMaterial({map:this.tex("#555d63",50,128,[1,1]),metalness:.6,roughness:.5});
     M.rust=new THREE.MeshStandardMaterial({map:this.tex("#7a4a2a",70,128,[1,1]),metalness:.4,roughness:.7});
     M.car=[0x8a2a2a,0x2a4a7a,0x5a5a2a,0x444444].map(c=>new THREE.MeshStandardMaterial({color:c,metalness:.5,roughness:.5}));
@@ -207,6 +238,7 @@ class MapManager{
     for(const [x,z] of [[16,10],[-18,6],[3,22],[-3,-26],[18,-10]]){this.B(x,0,z,1.8,.4,1.4,M.concrete);this.B(x+.8,0,z+.6,1,.7,1,M.concrete)}
     for(const [x,z] of [[-6,-3],[6,6],[-6,20],[6,-20],[-6,-40],[6,40]])this.B(x,0,z,.25,5,.25,M.dark);
   }
+  win(x,s,l=.3){for(let wx=16;wx<s;wx+=48)for(let wy=16;wy<s;wy+=48){x.fillStyle=Math.random()<l?"#ffd070":"#15181c";x.fillRect(wx,wy,18,24)}}
   base(gt,wm){
     const g=new THREE.Mesh(new THREE.PlaneGeometry(130,130),new THREE.MeshStandardMaterial({map:gt,roughness:1}));g.rotation.x=-Math.PI/2;g.receiveShadow=true;this.group.add(g);this.ground=g;
     for(const [x,z,w,d] of [[0,-56,116,2],[0,56,116,2],[-56,0,2,116],[56,0,2,116]])this.B(x,0,z,w,7,d,wm);
@@ -241,7 +273,7 @@ class MapManager{
     this.start=[0,46];this.spawns=[[-30,-30,"fast"],[14,-30,"heavy"],[-30,14,"shooter"],[30,14,"shooter"],[-10,-10,"fast"],[36,-10,"heavy"]];
     this.meds=[[-20,-20],[22,-18],[0,-2],[20,28],[-14,34]];this.boss=[0,-20];
     this.e.setEnv("#d8a860","#e8c890","#f0d8a8",0xd0a870,.017,0xfff0c0);
-    const sd=new THREE.MeshStandardMaterial({map:this.tex("#b58c58",30,128,[3,3],(x,s)=>{x.strokeStyle="#0004";for(let y=0;y<s;y+=24){x.beginPath();x.moveTo(0,y);x.lineTo(s,y);x.stroke()}}),roughness:1});
+    const sd=new THREE.MeshStandardMaterial({map:this.tex("#b58c58",30,128,[3,3],(x,s)=>{x.strokeStyle="#0004";for(let y=0;y<s;y+=24){x.beginPath();x.moveTo(0,y);x.lineTo(s,y);x.stroke()}this.win(x,s,0)}),roughness:1});
     this.base(this.tex("#c9a46a",25,256,[30,30]),sd);
     for(const [x,z,w,d,h] of [[-30,-30,14,12,9],[-10,-30,12,12,7],[14,-30,12,12,11],[36,-30,12,12,8],[-10,-10,12,10,8],[36,-10,12,10,10],[-30,14,14,12,10],[30,14,14,12,9]])this.building(x,z,w,d,h,sd);
     const cm=new THREE.MeshStandardMaterial({color:0x7a6a4a,metalness:.4,roughness:.7});
@@ -284,7 +316,7 @@ const EM={
 class EnemyAI{
   constructor(engine,x,z,type="fast"){
     this.e=engine;this.type=type;const T={fast:[60,5.2,10,1],heavy:[220,2.6,30,1.5],shooter:[80,3.4,8,1],alpha:[700,3.6,35,2.1]}[type];
-    this.hp=this.maxhp=T[0];this.ph=1;this.speed=T[1];this.dmg=T[2];this.sc=T[3];this.r=.45*this.sc;this.h=1.9*this.sc;this.reach=1.7*this.sc;
+    this.hp=this.maxhp=Math.round(T[0]*engine.hpm);this.ph=1;this.speed=T[1]*engine.dsp;this.dmg=T[2];this.sc=T[3];this.r=.45*this.sc;this.h=1.9*this.sc;this.reach=1.7*this.sc;
     this.pos=new V(x,0,z);this.home=new V(x,0,z);this.wp=new V(x,0,z);this.last=new V(x,0,z);
     this.state="PATROL";this.t=0;this.vt=Math.random()*.2;this.see=false;this.lost=0;this.stuck=0;this.side=1;
     this.cd=0;this.alertT=0;this.deadT=0;this.searchT=0;this.wpT=0;this.dead=false;
@@ -298,6 +330,9 @@ class EnemyAI{
     const limb=(w,l,m,x,y)=>{const p=new THREE.Group();p.position.set(x,y,0);const o=bx(w,l,w,m);o.position.y=-l/2;p.add(o);g.add(p);return p};
     this.arms=[limb(.15,.9,EM.skin,-.5,1.5),limb(.15,.9,EM.skin,.5,1.5)];
     this.legs=[limb(.2,.75,EM.body,-.2,.75),limb(.2,.75,EM.body,.2,.75)];
+    for(const a of this.arms){const c=bx(.2,.18,.08,EM.eye);c.position.set(0,-.95,.05);a.add(c)}
+    for(let i=0;i<3;i++){const sp=bx(.08,.3,.08,EM.skin);sp.position.set(0,1.45-i*.3,-.25);sp.rotation.x=.5;g.add(sp)}
+    const jw=bx(.3,.1,.3,EM.eye);jw.position.set(0,1.65,.25);g.add(jw);
     g.scale.setScalar(this.sc);g.traverse(o=>{o.userData.enemy=this});
     g.position.copy(this.pos);this.e.scene.add(g);
   }
@@ -309,7 +344,7 @@ class EnemyAI{
     this.last.copy(from);this.state="CHASE";
   }
   die(){
-    this.dead=true;this.state="DEAD";this.e.audio.kill();this.e.mission.kill(this.type);
+    this.dead=true;this.state="DEAD";this.e.audio.kill(new V(this.pos.x,1,this.pos.z));if(Math.random()<this.e.ddrop)this.e.dropAmmo(this.pos);this.e.mission.kill(this.type);
     this.e.particles.emit(new V(this.pos.x,this.pos.y+1.2,this.pos.z),24,"blood",5);
   }
   checkSee(P){
@@ -333,8 +368,9 @@ class EnemyAI{
     const f=this.hp/this.maxhp,ph=f>.66?1:f>.33?2:3;
     if(ph!==this.ph){
       this.ph=ph;this.e.audio.alien();this.e.toast("L’ALPHA ENTRE EN PHASE "+ph);
-      if(ph===3){this.speed=5.5;this.e.enemies.spawn(this.pos.x+4,this.pos.z,"fast");this.e.enemies.spawn(this.pos.x-4,this.pos.z,"fast")}
+      if(ph===3){this.speed=5.5*this.e.dsp;this.e.enemies.spawn(this.pos.x+4,this.pos.z,"fast");this.e.enemies.spawn(this.pos.x-4,this.pos.z,"fast")}
     }
+    if(ph>1){this.sw=(this.sw||5)-dt;if(this.sw<=0){this.sw=ph===3?5:8;this.e.shock(this.pos)}}
     if(ph>1&&this.see){this.vc=(this.vc||0)-dt;if(this.vc<=0){this.vc=ph===3?1.6:2.4;for(const a of[-.35,0,.35])this.e.fireBolt(this.pos,P,this.dmg*.4,a)}}
   }
   face(P){this.g.rotation.y=Math.atan2(P.pos.x-this.pos.x,P.pos.z-this.pos.z)}
@@ -350,7 +386,7 @@ class EnemyAI{
     let moving=false;if(this.type==="alpha")this.boss(dt,P);
     switch(this.state){
       case "PATROL":
-        if(this.see){this.state="ALERT";this.alertT=.45;this.e.audio.alien();break}
+        if(this.see){this.state="ALERT";this.alertT=.45;this.e.audio.alien(this.pos);break}
         this.wpT+=dt;moving=true;
         if(this.go(this.wp.x,this.wp.z,1.8,dt)||this.wpT>6)this.pickWp();
         break;
@@ -370,7 +406,7 @@ class EnemyAI{
       case "ATTACK":
         this.face(P);this.cd-=dt;
         if(d>this.reach+.7){this.state="CHASE";break}
-        if(this.cd<=0){this.cd=.9;this.arms[0].rotation.x=-1.6;if(d<this.reach+.5)P.hurt(this.dmg)}
+        if(this.cd<=0){this.cd=.9;this.arms[0].rotation.x=-1.6;if(d<this.reach+.5)P.hurt(this.dmg,this.pos)}
         break;
       case "SEARCH":
         moving=true;this.searchT+=dt;
@@ -403,8 +439,8 @@ class EnemyManager{
   spawn(x,z,t){this.list.push(new EnemyAI(this.e,x,z,t))}
   reinforce(dt){
     const M=this.e.mission,k=M.def.k,P=this.e.player;if(k==="boss")return;
-    this.rt=(this.rt||0)-dt;if(this.rt>0)return;this.rt=3;
-    const al=this.alive().length,cap=k==="kill"?6:k==="time"?7:3;
+    this.rt=(this.rt||0)-dt;if(this.rt>0)return;this.rt=this.e.drs;
+    const al=this.alive().length,cap=Math.round((k==="kill"?6:k==="time"?7:3)*[.6,.85,1][this.e.q]*this.e.dcap);
     if(al>=cap||(k==="kill"&&M.prog+al>=15))return;
     let x,z,n=0;
     do{x=rnd(-50,50);z=rnd(-50,50);n++}while(n<20&&(Math.hypot(x-P.pos.x,z-P.pos.z)<25||this.e.col.b.some(b=>x>b.x0-1&&x<b.x1+1&&z>b.z0-1&&z<b.z1+1&&b.y0<1)));
@@ -428,9 +464,13 @@ class WeaponSystem{
     m(.07,.1,.5,0x2b2f33,0,0,0);m(.03,.03,.32,0x111111,0,.02,-.4);m(.05,.16,.08,0x222222,0,-.12,.05);m(.06,.08,.2,0x3a3f44,0,-.02,.3);
     this.flash=new THREE.Mesh(new THREE.PlaneGeometry(.18,.18),new THREE.MeshBasicMaterial({color:0xffcc66,transparent:true,opacity:.9,depthTest:false}));
     this.flash.position.set(0,.02,-.6);this.flash.visible=false;g.add(this.flash);
+    if(!TOUCH){this.ml=new THREE.PointLight(0xffaa55,0,14);this.ml.position.set(0,.05,-.8);g.add(this.ml)}
+    const sg=new THREE.Mesh(new THREE.BoxGeometry(.03,.05,.12),new THREE.MeshStandardMaterial({color:0x111111}));sg.position.set(0,.08,-.1);g.add(sg);
+    const rd=new THREE.Mesh(new THREE.BoxGeometry(.012,.012,.012),new THREE.MeshBasicMaterial({color:0xff2222}));rd.position.set(0,.1,-.15);g.add(rd);
     this.base=new V(.2,-.2,-.42);g.position.copy(this.base);this.e.camera.add(g);
   }
   reset(){this.ammo=this.defs.map(d=>({mag:d.mag,reserve:d.reserve}));this.cur=0;this.s=this.defs[0];this.mag=this.s.mag;this.reserve=this.s.reserve;this.cd=0;this.rel=0;this.kick=0;this.fl=0;if(this.model)this.tint()}
+  addAmmo(){this.reserve=Math.min(this.s.reserve*2,this.reserve+Math.ceil(this.s.mag*1.5));for(let i=0;i<this.ammo.length;i++)if(i!==this.cur)this.ammo[i].reserve=Math.min(this.defs[i].reserve*2,this.ammo[i].reserve+this.defs[i].mag)}
   refill(){this.ammo=this.defs.map(d=>({mag:d.mag,reserve:d.reserve}));this.mag=this.s.mag;this.reserve=this.s.reserve}
   switchTo(i){this.ammo[this.cur]={mag:this.mag,reserve:this.reserve};this.cur=i;this.s=this.defs[i];this.mag=this.ammo[i].mag;this.reserve=this.ammo[i].reserve;this.rel=0;this.cd=.35;this.tint();this.e.audio.tone(400,600,.08,.2,"square")}
   tint(){const c=this.model.children;c[0].material.color.setHex(this.s.col);c[1].scale.z=this.cur===2?1.8:this.cur===1?.7:1;c[1].position.z=-.4-(c[1].scale.z-1)*.16}
@@ -441,7 +481,7 @@ class WeaponSystem{
   fire(){
     const P=this.e.player;
     if(this.mag<=0){this.e.audio.empty();this.cd=.25;this.reload();return}
-    this.mag--;this.cd=this.s.rate;this.kick=Math.min(.12,this.kick+.05);this.fl=.05;this.e.audio.shot(this.cur);
+    this.mag--;this.cd=this.s.rate;this.kick=Math.min(.12,this.kick+.05);this.fl=.05;this.e.audio.shot(this.cur);if(!this.s.plasma)this.e.particles.emit(this.e.camera.localToWorld(new V(.22,-.12,-.3)),1,"brass",2.5);
     const sp0=this.s.spread*(this.e.input.aim?.4:1)*(P.moving?2:1);
     for(let k=0;k<this.s.pel;k++)this.ray(sp0);
     if(this.s.plasma)this.e.particles.emit(this.e.camera.localToWorld(new V(.2,-.1,-1.2)),6,"plasma",2);
@@ -453,6 +493,7 @@ class WeaponSystem{
     const targets=[...this.e.map.solids,this.e.map.ground];
     for(const en of this.e.enemies.list)if(!en.dead)targets.push(en.g);
     const hits=this.rc.intersectObjects(targets,true);
+    this.e.tracer(this.e.camera.localToWorld(new V(.2,-.15,-.8)),hits.length?hits[0].point:this.rc.ray.at(40,new V()),this.s.plasma?0xcc66ff:0xffdd88);
     if(hits.length){
       const h=hits[0],en=h.object.userData.enemy;
       if(en&&!en.dead){
@@ -476,8 +517,8 @@ class WeaponSystem{
     const aim=this.e.input.aim;
     this.model.position.set(this.base.x*(aim?.1:1),this.base.y*(aim?.6:1)-rp*.25,this.base.z+this.kick);
     this.model.rotation.x=-rp*.9+this.kick*1.5;
-    this.fl-=dt;this.flash.visible=this.fl>0;
-    const tf=aim?(this.s.zoom||55):75;this.e.camera.fov+=(tf-this.e.camera.fov)*Math.min(1,dt*12);this.e.camera.updateProjectionMatrix();
+    this.fl-=dt;this.flash.visible=this.fl>0;if(this.ml){this.ml.color.setHex(this.s.plasma?0xb050ff:0xffaa55);this.ml.intensity=this.fl>0?3:0}
+    const tf=aim?(this.s.zoom||55):this.e.fov;this.e.camera.fov+=(tf-this.e.camera.fov)*Math.min(1,dt*12);this.e.camera.updateProjectionMatrix();
     $("wn").textContent=this.s.n;$("rl").textContent=this.rel>0?"RECHARGEMENT…":"";
   }
 }
@@ -486,37 +527,54 @@ class WeaponSystem{
 class Input{
   constructor(){
     this.keys={};this.lookX=0;this.lookY=0;this.mx=0;this.my=0;this.fire=false;this.aim=false;this.jump=false;this.sprint=false;this.reloadPressed=false;this.sw=-1;this.airPressed=false;
+    this.bind=Object.assign({fwd:"KeyW",back:"KeyS",left:"KeyA",right:"KeyD",jump:"Space",sprint:"ShiftLeft",reload:"KeyR",air:"KeyF",crouch:"ControlLeft"},lsj("mf_keys"));
     addEventListener("keydown",e=>{
       this.keys[e.code]=true;
-      if(e.code==="KeyR")this.reloadPressed=true;
+      if(this.cap){e.preventDefault();this.cap(e.code);this.cap=null;return}
+      if(e.code===this.bind.reload)this.reloadPressed=true;
       if(e.code>="Digit1"&&e.code<="Digit4")this.sw=+e.code.slice(5)-1;
-      if(e.code==="KeyF")this.airPressed=true;
+      if(e.code===this.bind.air)this.airPressed=true;
+      if(e.code==="Escape"&&this.free&&game.state==="playing")game.pause();
       if(e.code==="Space")e.preventDefault();
     });
     addEventListener("keyup",e=>{this.keys[e.code]=false});
-    addEventListener("mousedown",e=>{if(document.pointerLockElement){if(e.button===0)this.fire=true;if(e.button===2)this.aim=true}});
+    addEventListener("mousedown",e=>{if(document.pointerLockElement||this.free){if(e.button===0)this.fire=true;if(e.button===2)this.aim=true}});
     addEventListener("mouseup",e=>{if(e.button===0)this.fire=false;if(e.button===2)this.aim=false});
     addEventListener("contextmenu",e=>e.preventDefault());
-    addEventListener("mousemove",e=>{if(document.pointerLockElement){this.lookX+=e.movementX;this.lookY+=e.movementY}});
+    addEventListener("mousemove",e=>{if(document.pointerLockElement||(this.free&&e.buttons)){this.lookX+=e.movementX;this.lookY+=e.movementY}});
     addEventListener("blur",()=>{this.keys={};this.fire=false;this.aim=false});
+    document.addEventListener("pointerlockerror",()=>{this.free=true});
+  }
+  poll(dt){
+    const gp=(navigator.getGamepads?[...navigator.getGamepads()]:[]).find(g=>g&&g.connected);
+    if(!gp){this.pad=null;return}
+    const d=v=>Math.abs(v)>.15?v:0,b=i=>!!gp.buttons[i]&&(gp.buttons[i].pressed||gp.buttons[i].value>.4);
+    this.pad={x:d(gp.axes[0]),z:-d(gp.axes[1]),jump:b(0),crouch:b(1),sprint:b(10)};
+    this.lookX+=d(gp.axes[2])*900*dt;this.lookY+=d(gp.axes[3])*700*dt;
+    const p=this.pp||(this.pp={});
+    if(b(7)!==!!p.f){this.fire=b(7);p.f=b(7)}
+    if(b(6)!==!!p.a){this.aim=b(6);p.a=b(6)}
+    if(b(2)&&!p.r)this.reloadPressed=true;if(b(3)&&!p.w)this.sw=(game.weapon.cur+1)%4;
+    if(b(5)&&!p.s)this.airPressed=true;if(b(9)&&!p.p)game.pause();
+    p.r=b(2);p.w=b(3);p.s=b(5);p.p=b(9);
   }
   move(){
     const k=this.keys;
-    let x=(k.KeyD||k.ArrowRight?1:0)-(k.KeyA||k.ArrowLeft?1:0)+this.mx;
-    let z=(k.KeyW||k.ArrowUp?1:0)-(k.KeyS||k.ArrowDown?1:0)+this.my;
+    const b=this.bind,g=this.pad;let x=(k[b.right]||k.ArrowRight?1:0)-(k[b.left]||k.ArrowLeft?1:0)+this.mx+(g?g.x:0);
+    let z=(k[b.fwd]||k.ArrowUp?1:0)-(k[b.back]||k.ArrowDown?1:0)+this.my+(g?g.z:0);
     return {x:Math.max(-1,Math.min(1,x)),z:Math.max(-1,Math.min(1,z))};
   }
-  isJump(){return this.keys.Space||this.jump}
-  isSprint(){return this.keys.ShiftLeft||this.keys.ShiftRight||this.sprint}
+  isJump(){return this.keys[this.bind.jump]||this.jump||(this.pad&&this.pad.jump)}
+  isSprint(){return this.keys[this.bind.sprint]||this.sprint||(this.pad&&this.pad.sprint)}
 }
 class MobileControls{
   constructor(input){
     this.i=input;if(!TOUCH)return;
-    const joy=$("joy"),knob=$("knob");let jid=null,cx=0,cy=0;
-    joy.addEventListener("touchstart",e=>{e.preventDefault();const t=e.changedTouches[0];jid=t.identifier;const r=joy.getBoundingClientRect();cx=r.left+r.width/2;cy=r.top+r.height/2;upd(t)},{passive:false});
-    const upd=t=>{let dx=t.clientX-cx,dy=t.clientY-cy;const l=Math.hypot(dx,dy),m=50;if(l>m){dx*=m/l;dy*=m/l}knob.style.transform=`translate(${dx}px,${dy}px)`;input.mx=dx/m;input.my=-dy/m};
+    const joy=$("jz"),jv=$("joy"),knob=$("knob");let jid=null,cx=0,cy=0;
+    joy.addEventListener("touchstart",e=>{e.preventDefault();const t=e.changedTouches[0];jid=t.identifier;cx=t.clientX;cy=t.clientY;const w=jv.offsetWidth;jv.style.left=(cx-w/2)+"px";jv.style.top=(cy-w/2)+"px";jv.style.right="auto";jv.style.bottom="auto";jv.style.opacity=1;upd(t)},{passive:false});
+    const upd=t=>{let dx=t.clientX-cx,dy=t.clientY-cy;const l=Math.hypot(dx,dy),m=jv.offsetWidth*.38;if(l>m){dx*=m/l;dy*=m/l}knob.style.transform=`translate(${dx}px,${dy}px)`;input.mx=dx/m;input.my=-dy/m};
     joy.addEventListener("touchmove",e=>{e.preventDefault();for(const t of e.changedTouches)if(t.identifier===jid)upd(t)},{passive:false});
-    const end=e=>{for(const t of e.changedTouches)if(t.identifier===jid){jid=null;knob.style.transform="";input.mx=input.my=0}};
+    const end=e=>{for(const t of e.changedTouches)if(t.identifier===jid){jid=null;knob.style.transform="";input.mx=input.my=0;jv.style.left=jv.style.top=jv.style.right=jv.style.bottom="";jv.style.opacity=""}};
     joy.addEventListener("touchend",end);joy.addEventListener("touchcancel",end);
     const look=$("look");let lid=null,lx=0,ly=0;
     look.addEventListener("touchstart",e=>{const t=e.changedTouches[0];lid=t.identifier;lx=t.clientX;ly=t.clientY},{passive:true});
@@ -531,6 +589,7 @@ class MobileControls{
     btn("bRel",()=>input.reloadPressed=true);
     btn("bSw",()=>input.sw=(game.weapon.cur+1)%4);
     btn("bAir",()=>input.airPressed=true);
+    btn("bCr",()=>input.crouchT=!input.crouchT);
   }
 }
 
@@ -539,9 +598,11 @@ class PlayerController{
   constructor(engine){this.e=engine;this.pos=new V();this.vel=new V();this.r=.4;this.h=1.7;this.reset()}
   reset(){
     this.pos.set(this.e.map.start[0],0,this.e.map.start[1]);this.vel.set(0,0,0);this.vy=0;this.yaw=0;this.pitch=0;this.grounded=true;
-    this.hp=100;this.moving=false;this.stepD=0;this.bob=0;
+    this.hp=100;this.moving=false;this.stepD=0;this.bob=0;this.h=1.7;
   }
-  hurt(n){
+  hurt(n,from){
+    n*=this.e.dm;
+    if(from){const dx=from.x-this.pos.x,dz=from.z-this.pos.z,sy=Math.sin(this.yaw),cy=Math.cos(this.yaw),a=Math.atan2(dx*cy-dz*sy,-dx*sy-dz*cy),d=$("dir");d.style.transform="rotate("+a+"rad)";d.style.opacity=1;clearTimeout(this.dt2);this.dt2=setTimeout(()=>d.style.opacity=0,700)}
     if(this.hp<=0)return;
     this.hp=Math.max(0,this.hp-n);this.e.audio.hurt();
     const h=$("hurt");h.style.opacity=1;setTimeout(()=>h.style.opacity=0,120);
@@ -553,7 +614,9 @@ class PlayerController{
     const mv=I.move(),sy=Math.sin(this.yaw),cy=Math.cos(this.yaw);
     let wx=cy*mv.x-sy*mv.z,wz=-sy*mv.x-cy*mv.z;const l=Math.hypot(wx,wz);
     if(l>1){wx/=l;wz/=l}
-    const sp=(I.isSprint()&&mv.z>0&&!I.aim)?8.5:5;
+    const wc=I.keys[I.bind.crouch]||I.keys.KeyC||I.crouchT||(I.pad&&I.pad.crouch);
+    if(wc)this.h=Math.max(1,this.h-dt*6);else if(this.h<1.7&&col.ceiling(this.pos,this.r,1.7)===null)this.h=Math.min(1.7,this.h+dt*6);
+    const cr=this.h<1.5,sp=cr?2.8:(I.isSprint()&&mv.z>0&&!I.aim)?8.5:5;
     const k=1-Math.exp(-dt*(this.grounded?12:2.5));
     this.vel.x+=(wx*sp-this.vel.x)*k;this.vel.z+=(wz*sp-this.vel.z)*k;
     if(!col.moveAxis(this.pos,this.vel.x*dt,0,this.r,this.h,.55,this.grounded))this.vel.x=0;
@@ -567,7 +630,7 @@ class PlayerController{
     const spd=Math.hypot(this.vel.x,this.vel.z);this.moving=spd>.5&&this.grounded;
     if(this.moving){this.stepD+=spd*dt;this.bob+=spd*dt*1.6;if(this.stepD>2.2){this.stepD=0;this.e.audio.step()}}
     const cam=this.e.camera;
-    cam.position.set(this.pos.x,this.pos.y+1.62+(this.moving?Math.sin(this.bob)*.04:0),this.pos.z);
+    cam.position.set(this.pos.x,this.pos.y+this.h-.08+(this.moving?Math.sin(this.bob)*.04:0),this.pos.z);
     cam.rotation.set(this.pitch,this.yaw,0,"YXZ");
   }
 }
@@ -591,7 +654,7 @@ class HUDManager{
     const e=this.e,P=e.player,W=e.weapon;
     $("hp").style.width=P.hp+"%";$("hpT").textContent=Math.ceil(P.hp);
     $("ammo").textContent=W.mag+" / "+W.reserve;
-    const M=e.mission,D=M.def;$("mis").textContent="MISSION "+(M.idx+1)+" : "+D.t;$("obj").textContent=D.d+(D.k==="time"?"":" : "+M.prog+" / "+D.g);
+    const M=e.mission,D=M.def;$("mis").textContent="MISSION "+(M.idx+1)+" : "+D.t+" · "+["FACILE","NORMAL","DIFFICILE"][e.dlv];$("obj").textContent=D.d+(D.k==="time"?"":" : "+M.prog+" / "+D.g);
     const t=Math.floor(D.k==="time"?Math.max(0,D.g-M.mt):M.mt);$("tm").textContent=String(Math.floor(t/60)).padStart(2,"0")+":"+String(t%60).padStart(2,"0");
     const c=this.mm,s=110,sc=s/110;c.clearRect(0,0,s,s);
     c.save();c.translate(s/2,s/2);c.rotate(P.yaw);
@@ -643,7 +706,7 @@ class AirSupportSystem{
   blast(x,z){
     const e=this.e,c=new V(x,1,z),m=new THREE.Mesh(this.eg,new THREE.MeshBasicMaterial({color:0xffa030,transparent:true,opacity:.8}));
     m.position.copy(c);e.scene.add(m);this.fx.push({m,t:0});
-    e.particles.emit(c,18,"spark",9);e.particles.emit(c,14,"dust",6);e.audio.noise(.8,500,.9);e.audio.tone(90,30,.6,.6,"sawtooth");
+    e.particles.emit(c,18,"spark",9);e.particles.emit(c,14,"dust",6);e.audio.noise(.8,500,.9,c);e.audio.tone(90,30,.6,.6,"sawtooth",c);
     for(const en of e.enemies.list){if(en.dead)continue;const d=Math.hypot(en.pos.x-x,en.pos.z-z);if(d<7)en.damage(160*(1-d/7)+20,c)}
     const P=e.player,d=Math.hypot(P.pos.x-x,P.pos.z-z);if(d<5)P.hurt(25*(1-d/5)+5);
   }
@@ -667,24 +730,27 @@ class GameEngine{
     const sun=this.sun=new THREE.DirectionalLight(0xffa060,1.1);sun.position.set(-40,30,-20);
     if(!TOUCH){sun.castShadow=true;sun.shadow.mapSize.set(1024,1024);const c=sun.shadow.camera;c.left=-60;c.right=60;c.top=60;c.bottom=-60;c.far=140}
     this.scene.add(sun);
-    this.audio=new AudioManager();this.input=new Input();this.mobile=new MobileControls(this.input);
+    this.audio=new AudioManager();this.audio.cam=this.camera;this.input=new Input();this.mobile=new MobileControls(this.input);
     this.col=new CollisionSystem();this.eRay=new THREE.Raycaster();
     this.particles=new ParticleSystem(this.scene,TOUCH?40:90);
     this.map=new MapManager(this);this.map.build();
     this.player=new PlayerController(this);this.weapon=new WeaponSystem(this);
     this.air=new AirSupportSystem(this);this.enemies=new EnemyManager(this);this.mission=new MissionManager(this);this.hud=new HUDManager(this);
-    this.last=performance.now();this.hitT=0;this.bolts=[];this.mapId=0;this.wsel=0;this.pickups=[];this.boltGeo=new THREE.SphereGeometry(.15,6,6);this.boltMat=new THREE.MeshBasicMaterial({color:0xff44ff});
+    this.fov=75;this.rs=1;this.initFX();this.tr=[];this.tri=0;
+    for(let i=0;i<12;i++){const l=new THREE.Line(new THREE.BufferGeometry().setFromPoints([new V(),new V()]),new THREE.LineBasicMaterial({color:0xffdd88,transparent:true,opacity:.8}));l.visible=false;l.frustumCulled=false;this.scene.add(l);this.tr.push({l,life:0})}
+    this.last=performance.now();this.hitT=0;this.bolts=[];this.mapId=0;this.wsel=0;this.shocks=[];this.dm=1;this.hpm=1;this.dsp=1;this.dcap=1;this.ddrop=.5;this.dheal=40;this.drs=3;this.dlv=1;this.pickups=[];this.boltGeo=new THREE.SphereGeometry(.15,6,6);this.boltMat=new THREE.MeshBasicMaterial({color:0xff44ff});
     addEventListener("resize",()=>this.resize());this.resize();
     document.addEventListener("pointerlockchange",()=>{if(!document.pointerLockElement&&this.state==="playing"&&!TOUCH)this.pause()});
     document.addEventListener("visibilitychange",()=>{if(document.hidden&&this.state==="playing")this.pause()});
     this.loop=this.loop.bind(this);requestAnimationFrame(this.loop);
   }
-  resize(){this.renderer.setSize(innerWidth,innerHeight,false);this.camera.aspect=innerWidth/innerHeight;this.camera.updateProjectionMatrix()}
-  lock(){if(!TOUCH){const p=$("c").requestPointerLock();if(p&&p.catch)p.catch(()=>{})}}
+  resize(){if(TOUCH&&innerHeight>innerWidth&&innerWidth<700&&this.state==="playing")this.pause();this.renderer.setSize(innerWidth,innerHeight,false);this.camera.aspect=innerWidth/innerHeight;this.camera.updateProjectionMatrix()}
+  lock(){if(!TOUCH){if(!$("c").requestPointerLock){this.input.free=true;return}const p=$("c").requestPointerLock();if(p&&p.catch)p.catch(()=>{this.input.free=true})}}
   start(){
     this.audio.init();
-    this.enemies.clear();this.loadMap(this.mapId);this.particles.reset();this.player.reset();this.weapon.reset();if(this.wsel)this.weapon.switchTo(this.wsel);this.mission.reset();
-    this.input.fire=this.input.aim=false;this.air.reset();this.setupMission();
+    this.enemies.clear();this.loadMap(this.mapId);this.particles.reset();this.player.reset();this.weapon.reset();if(this.wsel)this.weapon.switchTo(this.wsel);this.mission.reset();this.mission.idx=Math.min(this.msel||0,SaveManager.load().unlocked||0);this.mission.begin();
+    this.input.fire=this.input.aim=false;this.af=-4;this.an=0;this.rs=1;try{if(navigator.wakeLock)navigator.wakeLock.request("screen").catch(()=>{})}catch(x){}
+    this.air.reset();this.setupMission();
     this.state="playing";$("ov").style.display="none";this.lock();
   }
   resume(){this.audio.init();this.state="playing";$("ov").style.display="none";this.lock()}
@@ -702,7 +768,8 @@ class GameEngine{
   showOv(t,p,b){
     $("ovT").textContent=t;$("ovP").textContent=p;$("ovB").textContent=b;
     const s=SaveManager.load();$("best").textContent=s.best!==null?"Meilleur temps : "+Math.floor(s.best)+" s · Victoires : "+s.wins:"";
-    $("ov").style.display="flex";
+    const ps=this.state==="paused";for(const id of["ms","maps","arm"])$(id).style.display=ps?"none":"";
+    $("ovM").style.display=this.state==="menu"?"none":"inline-flex";if(window.refreshMs)refreshMs();$("bossb").style.display="none";$("ov").style.display="flex";
   }
   fireBolt(p,P,dmg,ang=0){
     const m=new THREE.Mesh(this.boltGeo,this.boltMat);m.position.set(p.x,p.y+1.5,p.z);
@@ -712,7 +779,7 @@ class GameEngine{
   updateBolts(dt){
     for(let i=this.bolts.length-1;i>=0;i--){
       const b=this.bolts[i],p=b.m.position,P=this.player;p.addScaledVector(b.v,dt);b.life-=dt;let rm=b.life<=0||p.y<0;
-      if(Math.hypot(p.x-P.pos.x,p.z-P.pos.z)<.6&&p.y>P.pos.y&&p.y<P.pos.y+1.8){P.hurt(b.dmg);rm=true}
+      if(Math.hypot(p.x-P.pos.x,p.z-P.pos.z)<.6&&p.y>P.pos.y&&p.y<P.pos.y+1.8){P.hurt(b.dmg,{x:p.x-b.v.x,z:p.z-b.v.z});rm=true}
       else for(const c of this.col.b)if(p.x>c.x0&&p.x<c.x1&&p.z>c.z0&&p.z<c.z1&&p.y>c.y0&&p.y<c.y1){rm=true;break}
       if(rm){this.scene.remove(b.m);this.bolts.splice(i,1)}
     }
@@ -730,7 +797,8 @@ class GameEngine{
     const P=this.player;
     for(let i=this.pickups.length-1;i>=0;i--){
       const k=this.pickups[i];k.g.rotation.y+=dt*2;
-      if((P.hp<100||this.mission.def.k==="med")&&Math.hypot(k.x-P.pos.x,k.z-P.pos.z)<1.3){this.mission.collect();P.hp=Math.min(100,P.hp+40);this.audio.tone(500,900,.25,.3,"triangle");this.scene.remove(k.g);this.pickups.splice(i,1)}
+      if(k.ammo){k.life-=dt;const near=Math.hypot(k.x-P.pos.x,k.z-P.pos.z)<1.3;if(near){this.weapon.addAmmo();this.audio.tone(700,900,.12,.25,"square")}if(near||k.life<=0){this.scene.remove(k.g);this.pickups.splice(i,1)}continue}
+      if((P.hp<100||this.mission.def.k==="med")&&Math.hypot(k.x-P.pos.x,k.z-P.pos.z)<1.3){this.mission.collect();P.hp=Math.min(100,P.hp+this.dheal);this.audio.tone(500,900,.25,.3,"triangle");this.scene.remove(k.g);this.pickups.splice(i,1)}
     }
   }
   clearPickups(){for(const k of this.pickups)this.scene.remove(k.g);this.pickups.length=0}
@@ -742,9 +810,61 @@ class GameEngine{
   }
   setupMission(){
     this.enemies.clear();this.clearBolts();this.clearPickups();this.spawnMedkits();const k=this.mission.def.k;
-    if(k==="boss")this.enemies.spawn(this.map.boss[0],this.map.boss[1],"alpha");else this.enemies.spawnAll(k==="med"?3:6);
+    if(k==="boss")this.enemies.spawn(this.map.boss[0],this.map.boss[1],"alpha");else this.enemies.spawnAll(Math.max(2,Math.round((k==="med"?3:6)*[.6,.85,1][this.q]*this.dcap)));
   }
-  loadMap(id){this.map.dispose();this.col.clear();this.map=new MapManager(this,id);this.map.build()}
+  setPR(){this.renderer.setPixelRatio(Math.min(devicePixelRatio||1,[.7,1,1.5][this.q])*this.rs);this.resize()}
+  adapt(dt){
+    if(this.af<0){this.af+=dt;this.an=0;return}
+    this.af=(this.af||0)+dt;this.an=(this.an||0)+1;if(this.af<2)return;
+    const fps=this.an/this.af;this.af=0;this.an=0;
+    if(fps<40){this.good=0;if(this.rs>.6){this.rs=Math.max(.6,this.rs-.12);this.setPR()}else if(this.q>0)this.setQuality(this.q-1)}
+    else if(fps>57&&this.rs<1){this.good=(this.good||0)+1;if(this.good>=3){this.rs=Math.min(1,this.rs+.08);this.setPR();this.good=0}}
+  }
+  tracer(a,b,c){const t=this.tr[this.tri++%this.tr.length];t.l.geometry.setFromPoints([a,b]);t.l.material.color.setHex(c);t.l.visible=true;t.life=.06}
+  initFX(){
+    const n=TOUCH?60:140;this.fxG=new THREE.BufferGeometry();this.fxG.setAttribute("position",new THREE.BufferAttribute(new Float32Array(n*3),3));
+    this.fxM=new THREE.PointsMaterial({size:.2,transparent:true,opacity:.6,depthWrite:false});this.fxP=new THREE.Points(this.fxG,this.fxM);this.fxP.frustumCulled=false;this.fxP.visible=false;this.scene.add(this.fxP);
+  }
+  setFX(id){
+    const m=this.fxM,a=this.fxG.attributes.position.array,s=this.map.start;this.fxId=id;this.fxP.visible=id>0;
+    if(id===1){m.color.setHex(0x80ffd0);m.size=.2}else{m.color.setHex(0xe0b878);m.size=.28}
+    for(let i=0;i<a.length;i+=3){a[i]=s[0]+rnd(-22,22);a[i+1]=rnd(0,8);a[i+2]=s[1]+rnd(-22,22)}this.fxG.attributes.position.needsUpdate=true;
+  }
+  updateFX(dt){
+    for(const t of this.tr)if(t.life>0){t.life-=dt;if(t.life<=0)t.l.visible=false}
+    if(!this.fxP.visible)return;
+    const a=this.fxG.attributes.position.array,P=this.camera.position,d=this.fxId===2;
+    for(let i=0;i<a.length;i+=3){
+      a[i]+=(d?9:Math.sin(a[i+2])*.3)*dt;a[i+1]+=(d?.3:.5)*dt;a[i+2]+=(d?2:0)*dt;
+      if(Math.abs(a[i]-P.x)>22||Math.abs(a[i+2]-P.z)>22||a[i+1]<0||a[i+1]>8){a[i]=P.x+rnd(-22,22);a[i+1]=rnd(0,8);a[i+2]=P.z+rnd(-22,22)}
+    }
+    this.fxG.attributes.position.needsUpdate=true;
+  }
+  dropAmmo(p){
+    const g=new THREE.Mesh(new THREE.BoxGeometry(.4,.25,.25),new THREE.MeshBasicMaterial({color:0xffcc33}));g.position.set(p.x,.6,p.z);this.scene.add(g);this.pickups.push({g,x:p.x,z:p.z,ammo:1,life:25});
+  }
+  shock(p){
+    const m=new THREE.Mesh(new THREE.RingGeometry(.9,1,40),new THREE.MeshBasicMaterial({color:0xff5533,side:THREE.DoubleSide,transparent:true,opacity:.8}));
+    m.rotation.x=-Math.PI/2;m.position.set(p.x,.2,p.z);this.scene.add(m);this.shocks.push({m,t:0,x:p.x,z:p.z,y:p.y,hit:false});
+    this.audio.noise(.6,300,.8,p);this.toast("ONDE DE CHOC : SAUTEZ !");
+  }
+  updateShocks(dt){
+    const P=this.player;
+    for(let i=this.shocks.length-1;i>=0;i--){
+      const s=this.shocks[i];s.t+=dt;const r=s.t*14;s.m.scale.setScalar(r);s.m.material.opacity=Math.max(0,.8-s.t);
+      if(!s.hit&&Math.abs(Math.hypot(P.pos.x-s.x,P.pos.z-s.z)-r)<1&&P.pos.y<s.y+.6){s.hit=true;P.hurt(30,{x:s.x,z:s.z})}
+      if(s.t>.9){this.scene.remove(s.m);this.shocks.splice(i,1)}
+    }
+  }
+  updateBoss(){
+    const b=this.enemies.list.find(x=>x.type==="alpha"&&!x.dead);$("bossb").style.display=b?"block":"none";
+    if(b)$("bossh").style.width=Math.max(0,b.hp/b.maxhp*100)+"%";
+  }
+  toMenu(){
+    this.state="menu";this.input.fire=this.input.aim=false;if(document.pointerLockElement)document.exitPointerLock();
+    this.enemies.clear();this.clearBolts();this.air.reset();this.showOv("METROPOLIS FALLEN","Choisissez mission, carte et arme.","NOUVELLE PARTIE");
+  }
+  loadMap(id){this.map.dispose();this.col.clear();this.map=new MapManager(this,id);this.map.build();this.setFX(id)}
   setEnv(a,b,c,f,d,s){
     const cv=document.createElement("canvas");cv.width=4;cv.height=256;const x=cv.getContext("2d"),g=x.createLinearGradient(0,0,0,256);
     g.addColorStop(0,a);g.addColorStop(.6,b);g.addColorStop(1,c);x.fillStyle=g;x.fillRect(0,0,4,256);
@@ -752,14 +872,14 @@ class GameEngine{
     this.scene.background=new THREE.CanvasTexture(cv);this.scene.fog.color.setHex(f);this.scene.fog.density=d;this.sun.color.setHex(s);
   }
   setQuality(q){
-    this.q=q;this.renderer.setPixelRatio(Math.min(devicePixelRatio||1,[.7,1,1.5][q]));
+    this.q=q;this.particles.lim=[.3,.65,1][q];this.renderer.setPixelRatio(Math.min(devicePixelRatio||1,[.7,1,1.5][q])*(this.rs||1));
     const sh=q===2&&!TOUCH;this.renderer.shadowMap.enabled=sh;this.sun.castShadow=sh;this.resize();
     this.scene.traverse(o=>{if(o.material)[].concat(o.material).forEach(m=>m.needsUpdate=true)});
   }
   toast(m){const t=$("toast");t.textContent=m;t.style.opacity=1;clearTimeout(this.tt);this.tt=setTimeout(()=>t.style.opacity=0,2800)}
   hitMarker(){const h=$("hit");h.style.opacity=1;clearTimeout(this.hitT);this.hitT=setTimeout(()=>h.style.opacity=0,120)}
   update(dt){
-    this.player.update(dt);this.weapon.update(dt);this.enemies.update(dt);this.particles.update(dt);this.updateBolts(dt);this.updatePickups(dt);this.air.update(dt);
+    this.input.poll(dt);this.adapt(dt);this.player.update(dt);this.weapon.update(dt);this.enemies.update(dt);this.particles.update(dt);this.updateBolts(dt);this.updatePickups(dt);this.air.update(dt);this.updateShocks(dt);this.updateBoss();this.updateFX(dt);
     for(const h of this.map.hazards){const P=this.player;if(Math.hypot(P.pos.x-h.x,P.pos.z-h.z)<h.r&&P.grounded){this.hz=(this.hz||0)-dt;if(this.hz<=0){this.hz=.5;P.hurt(h.dps*.5)}}}
     this.mission.update(dt);this.hud.update();
     if(this.player.hp<=0)this.end(false);else if(this.mission.done())this.advance();
@@ -778,8 +898,21 @@ class MenuManager{
     const e=this.e,mk=(id,items,fn,sel)=>{const d=$(id);d.innerHTML="";items.forEach((t,i)=>{const b=document.createElement("button");b.textContent=t;b.className="s";b.onclick=()=>{fn(i);[...d.children].forEach((c,k)=>c.classList.toggle("on",k===i))};d.appendChild(b);if(i===sel)b.classList.add("on")})};
     mk("maps",["METROPOLIS FALLEN","ALIEN FOREST","DESERT APOCALYPSE"],i=>e.mapId=i,0);
     mk("wb",e.weapon.defs.map(d=>d.n),i=>{e.wsel=i;this.info()},0);
-    $("q").onchange=ev=>e.setQuality(+ev.target.value);
-    const dq=TOUCH?0:2;$("q").value=dq;e.setQuality(dq);this.info();this.pv();
+    const ms=$("ms");ms.innerHTML="";
+    ["MISSION 1","MISSION 2","MISSION 3","MISSION 4"].forEach((t,i)=>{const b=document.createElement("button");b.className="s"+(i===0?" on":"");b.textContent=t;b.onclick=()=>{if(i>(SaveManager.load().unlocked||0))return;e.msel=i;[...ms.children].forEach((c,k)=>c.classList.toggle("on",k===i))};ms.appendChild(b)});
+    window.refreshMs=()=>[...ms.children].forEach((c,i)=>c.style.opacity=i>(SaveManager.load().unlocked||0)?.4:1);refreshMs();
+    $("ovM").onclick=()=>e.toMenu();$("bPause").onclick=()=>{if(e.state==="playing")e.pause()};$("bHome").onclick=()=>{if(e.state==="playing")e.toMenu()};
+    let ui={};try{ui=JSON.parse(localStorage.getItem("mf_ui")||"{}")||{}}catch(x){}
+    const ap=()=>{document.body.classList.toggle("lh",!!ui.lh);document.documentElement.style.setProperty("--u","calc(clamp(52px,13vmin,92px)*"+(ui.k||1)+")");try{localStorage.setItem("mf_ui",JSON.stringify(ui))}catch(x){}};
+    $("bsz").value=ui.k||1;$("lh").checked=!!ui.lh;$("bsz").oninput=ev=>{ui.k=+ev.target.value;ap()};$("lh").onchange=ev=>{ui.lh=ev.target.checked;ap()};ap();
+    $("fov").value=ui.fov||75;e.fov=+$("fov").value;$("fov").oninput=ev=>{ui.fov=+ev.target.value;e.fov=ui.fov;ap()};
+    const kn={fwd:"Avancer",back:"Reculer",left:"Gauche",right:"Droite",jump:"Sauter",sprint:"Sprint",reload:"Recharger",air:"Frappe",crouch:"Accroupi"},kb=$("kb");
+    const rk=()=>{kb.innerHTML="";for(const a in kn){const b=document.createElement("button");b.className="s";b.textContent=kn[a]+" : "+e.input.bind[a].replace("Key","").replace("Digit","");b.onclick=()=>{b.textContent=kn[a]+" : …";e.input.cap=c=>{e.input.bind[a]=c;try{localStorage.setItem("mf_keys",JSON.stringify(e.input.bind))}catch(x){}rk()}};kb.appendChild(b)}};rk();
+    const fs=$("bFs");if(!document.documentElement.requestFullscreen)fs.style.display="none";
+    fs.onclick=()=>{if(document.fullscreenElement)document.exitFullscreen();else document.documentElement.requestFullscreen().catch(()=>{})};
+    $("df").onchange=ev=>{const v=+ev.target.value;Object.assign(e,{dlv:v,dm:[.5,1,1.6][v],hpm:[.7,1,1.5][v],dsp:[.8,1,1.25][v],dcap:[.7,1,1.4][v],ddrop:[.8,.5,.3][v],dheal:[60,40,25][v],drs:[4.5,3,2][v]})};
+    
+    e.setQuality(TOUCH?0:2);this.info();this.pv();
   }
   info(){const d=this.e.weapon.defs[this.e.wsel];$("wi").textContent=d.n+" · dégâts "+d.dmg+(d.pel>1?" ×"+d.pel:"")+" · cadence "+(1/d.rate).toFixed(1)+"/s · portée "+d.range+" m · chargeur "+d.mag+" · réserve "+d.reserve}
   pv(){
